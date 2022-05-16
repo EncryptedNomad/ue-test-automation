@@ -1,6 +1,7 @@
 #pragma once
 
 #include "DaeTestReportWriterSet.h"
+#include "Settings/DaeTestMapMetaData.h"
 #include <CoreMinimal.h>
 #include <GameFramework/Actor.h>
 #include "DaeTestActor.generated.h"
@@ -38,6 +39,9 @@ public:
 
     /** Gets how long this test is allowed to run before it fails automatically, in seconds. */
     float GetTimeoutInSeconds() const;
+
+    /** Flag the test that it had a timeout. The test ran longer than TimeoutInSeconds. */
+    void Timeout();
 
     /** Gets the parameters to run this test with, one per run.  */
     TArray<TSoftObjectPtr<UObject>> GetParameters() const;
@@ -99,6 +103,10 @@ public:
     FDaeTestActorTestSkippedSignature OnTestSkipped;
 
 protected:
+#if WITH_EDITOR
+	virtual void PostEditChangeChainProperty(FPropertyChangedChainEvent& PropertyChangedEvent) override;
+#endif
+
     /** How long this test is allowed to run before it fails automatically, in seconds. */
     UPROPERTY(EditAnywhere)
     float TimeoutInSeconds;
@@ -116,10 +124,19 @@ private:
     UPROPERTY(EditAnywhere)
     TArray<ADaeTestParameterProviderActor*> ParameterProviders;
 
+	/** Optional meta data for a test. */
+	UPROPERTY(EditInstanceOnly)
+	FDaeTestMapMetaData TestMetaData;
+
     /** Parameter for the current test run. */
     UPROPERTY()
     UObject* CurrentParameter;
 
+    /** Whether this test had a timeout or finished in time. */
+    UPROPERTY()
+    bool bHadTimeout = false;
+
     /** Whether this test has finished executing (either with success or failure). */
-    bool bHasResult;
+    UPROPERTY()
+    bool bHasResult = false;
 };

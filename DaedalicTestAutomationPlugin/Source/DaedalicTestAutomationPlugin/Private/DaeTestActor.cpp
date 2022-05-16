@@ -1,8 +1,10 @@
 #include "DaeTestActor.h"
+#include "DaeTestAssertBlueprintFunctionLibrary.h"
 #include "DaeTestLogCategory.h"
 #include "DaeTestParameterProviderActor.h"
 #include "DaeTestReportWriterJUnit.h"
 #include "DaeTestResult.h"
+#include "Settings/DaeTestAutomationPluginSettings.h"
 
 ADaeTestActor::ADaeTestActor(
     const FObjectInitializer& ObjectInitializer /*= FObjectInitializer::Get()*/)
@@ -41,6 +43,7 @@ void ADaeTestActor::RunTest(UObject* TestParameter)
 {
     CurrentParameter = TestParameter;
     bHasResult = false;
+    bHadTimeout = false;
 
     if (!SkipReason.IsEmpty())
     {
@@ -84,6 +87,16 @@ void ADaeTestActor::FinishAct()
 float ADaeTestActor::GetTimeoutInSeconds() const
 {
     return TimeoutInSeconds;
+}
+
+void ADaeTestActor::Timeout()
+{
+    // Enough waiting. Let's see the results.
+    UE_LOG(LogDaeTest, Warning, TEXT("Timed out after %f seconds"), GetTimeoutInSeconds());
+
+    bHadTimeout = true;
+
+    FinishAct();
 }
 
 TArray<TSoftObjectPtr<UObject>> ADaeTestActor::GetParameters() const
@@ -163,8 +176,26 @@ void ADaeTestActor::NotifyOnAct(UObject* Parameter)
 
 void ADaeTestActor::NotifyOnAssert(UObject* Parameter)
 {
+    UDaeTestAssertBlueprintFunctionLibrary::AssertFalse(bHadTimeout,
+                                                        TEXT("The test had a timeout."), this);
+
     ReceiveOnAssert(Parameter);
 }
+
+#if WITH_EDITOR
+void ADaeTestActor::PostEditChangeChainProperty(FPropertyChangedChainEvent& PropertyChangedEvent)
+{
+	Super::PostEditChangeChainProperty(PropertyChangedEvent);
+    
+	const FName PropertyName = PropertyChangedEvent.GetPropertyName();
+	const FName PropertyHead = PropertyChangedEvent.PropertyChain.GetHead()->GetValue()->GetFName();
+	const FName PropertyTail = PropertyChangedEvent.PropertyChain.GetTail()->GetValue()->GetFName();
+	if (PropertyHead == GET_MEMBER_NAME_CHECKED(ADaeTestActor, TestMetaData))
+	{
+		UDaeTestAutomationPluginSettings::SetTestMetaData(this, TestMetaData);
+	}
+}
+#endif
 
 void ADaeTestActor::ReceiveOnAct_Implementation(UObject* Parameter)
 {

@@ -52,14 +52,16 @@ void ADaeTestPerformanceBudgetActor::BeginPlay()
 
     bIsRunning = false;
     bIsRecording = false;
-
-    CurrentTargetPointIndex = 0;
-    LastBudgetViolationTime = 0.0f;
 }
 
 void ADaeTestPerformanceBudgetActor::NotifyOnArrange(UObject* Parameter)
 {
     Super::NotifyOnArrange(Parameter);
+
+    // Reset values after each test with parameters.
+	CurrentTargetPointIndex = 0;
+	LastBudgetViolationTime = 0.0f;
+	BudgetViolations.Empty();
 
     // Spawn flying pawn.
     APlayerController* Player = UGameplayStatics::GetPlayerController(this, 0);
@@ -71,12 +73,12 @@ void ADaeTestPerformanceBudgetActor::NotifyOnArrange(UObject* Parameter)
         return;
     }
 
-    ATargetPoint* StartingPoint = FlightPath[0];
+    const ATargetPoint* StartingPoint = FlightPath[0];
 
     FRotator SpawnRotation(ForceInit);
     SpawnRotation.Yaw = StartingPoint->GetActorRotation().Yaw;
-    FVector SpawnLocation = StartingPoint->GetActorLocation();
-    FTransform SpawnTransform = FTransform(SpawnRotation, SpawnLocation);
+	const FVector SpawnLocation = StartingPoint->GetActorLocation();
+	const FTransform SpawnTransform = FTransform(SpawnRotation, SpawnLocation);
 
     FActorSpawnParameters SpawnInfo;
     SpawnInfo.Instigator = GetInstigator();
@@ -92,7 +94,13 @@ void ADaeTestPerformanceBudgetActor::NotifyOnArrange(UObject* Parameter)
         return;
     }
 
+    APawn* PreviousPawn = Player->GetPawn();
     Player->Possess(Pawn);
+    // Clean up previous pawn.
+    if (IsValid(PreviousPawn))
+    {
+		PreviousPawn->Destroy();
+    }
 
     UE_LOG(LogDaeTest, Log, TEXT("%s spawned %s for %s at %s."), *GetName(), *Pawn->GetName(),
            *Player->GetName(), *StartingPoint->GetName());
@@ -152,10 +160,10 @@ void ADaeTestPerformanceBudgetActor::Tick(float DeltaSeconds)
     if (FlightPath.IsValidIndex(CurrentTargetPointIndex))
     {
         // Follow flight path.
-        ATargetPoint* CurrentTargetPoint = FlightPath[CurrentTargetPointIndex];
+		const ATargetPoint* CurrentTargetPoint = FlightPath[CurrentTargetPointIndex];
 
-        FVector ToTargetPoint = CurrentTargetPoint->GetActorLocation() - Pawn->GetActorLocation();
-        float Distance = ToTargetPoint.Size();
+		const FVector ToTargetPoint = CurrentTargetPoint->GetActorLocation() - Pawn->GetActorLocation();
+		const float Distance = ToTargetPoint.Size();
 
         if (Distance <= AcceptanceRadius)
         {
@@ -195,11 +203,10 @@ void ADaeTestPerformanceBudgetActor::Tick(float DeltaSeconds)
             else if(!bUseTargetRotation)
             {
                 // Smoothly rotate in movement direction.
-                FRotator CurrentRotation = Pawn->GetActorRotation();
-                FRotator TargetRotation = Direction.ToOrientationRotator();
+                const FRotator CurrentRotation = Pawn->GetActorRotation();
+				const FRotator TargetRotation = Direction.ToOrientationRotator();
 
-                FRotator NewRotation =
-                    FMath::RInterpTo(CurrentRotation, TargetRotation, DeltaSeconds, 1.0f);
+				const FRotator NewRotation = FMath::RInterpTo(CurrentRotation, TargetRotation, DeltaSeconds, 1.0f);
 
                 Pawn->SetActorRotation(NewRotation);
             }

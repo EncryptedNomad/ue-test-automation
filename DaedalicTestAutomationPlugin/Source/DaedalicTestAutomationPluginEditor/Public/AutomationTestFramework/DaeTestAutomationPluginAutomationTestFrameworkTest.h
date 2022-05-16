@@ -1,6 +1,8 @@
 #pragma once
 
 #include "AutomationTestFramework/DaeTestAutomationPluginAutomationTestFrameworkTestContext.h"
+#include "Settings/DaeTestMapMetaData.h"
+#include "Settings/DaeTestMapSettings.h"
 #include <CoreMinimal.h>
 #include <Misc/AutomationTest.h>
 
@@ -8,7 +10,32 @@
 class FDaeTestAutomationPluginAutomationTestFrameworkTest : FAutomationTestBase
 {
 public:
-    FDaeTestAutomationPluginAutomationTestFrameworkTest(const FString& InMapName);
+	FDaeTestAutomationPluginAutomationTestFrameworkTest(const FString& InMapName, const FDaeTestMapMetaData& InMapMetaData);
+
+    /**
+	 * If true no logging will be included in test events.
+	 *
+	 * @return true to suppress logs
+	 */
+    virtual bool SuppressLogs() override;
+    /**
+	 * If returns true then logging with a level of Error will not be recorded in test results.
+	 *
+	 * @return false to make errors errors
+	 */
+    virtual bool SuppressLogErrors() override;
+    /**
+	 * If returns true then logging with a level of Warning will not be recorded in test results.
+	 *
+	 * @return true to make warnings errors
+	 */
+    virtual bool SuppressLogWarnings() override;
+    /**
+	 * If returns true then logging with a level of Warning will be treated as an error.
+	 *
+	 * @return true to make warnings errors
+	 */
+    virtual bool ElevateLogWarningsToErrors() override;
 
     virtual uint32 GetTestFlags() const override;
     virtual uint32 GetRequiredDeviceNum() const override;
@@ -24,6 +51,11 @@ protected:
     virtual FString GetBeautifiedTestName() const override;
 
 private:
+    /** Level name of this test. */
     FString MapName;
+    /** Meta data for this test (tags, priority, expected errors and warnings). */
+	FDaeTestMapMetaData MapMetaData;
+    /** Global test map settings (suppress warnings or errors). */
+	FDaeTestMapSettings TestMapSettings;
     FDaeTestAutomationPluginAutomationTestFrameworkTestContext Context;
 };
