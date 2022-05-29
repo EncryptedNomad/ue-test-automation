@@ -11,5 +11,8 @@ public:
     ADaeTestSuiteActor* CurrentTestSuite;
     TMap<FString, FString> OldConsoleVariables;
 
+    /** Associated automation test; all warnings, errors, etc. are routed to the automation test to track */
+    FAutomationTestBase* CurTest;
+
     FDaeTestAutomationPluginAutomationTestFrameworkTestContext();
 };

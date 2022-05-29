@@ -1,5 +1,7 @@
 #pragma once
 
+#include "DaeTestMapMetaData.h"
+#include "DaeTestMapSettings.h"
 #include <CoreMinimal.h>
 #include <UObject/Object.h>
 #include "DaeTestAutomationPluginSettings.generated.h"
@@ -18,27 +20,45 @@ public:
     FString TestMapPath;
 
     /** Paths to look for test maps in, relative to the Content root of your project (e.g. Maps/AutomatedTests). */
-    UPROPERTY(config, EditAnywhere)
+	UPROPERTY(config, EditAnywhere, Category = "General")
     TArray<FString> TestMapFolders;
 
     /** Names of additional maps to test. */
-    UPROPERTY(config, EditAnywhere)
+	UPROPERTY(config, EditAnywhere, Category = "General")
     TArray<FName> AdditionalTestMaps;
 
     /** Names of maps to ignore when found in test map folders. */
-    UPROPERTY(config, EditAnywhere)
+	UPROPERTY(config, EditAnywhere, Category = "General")
     TArray<FName> IgnoredMaps;
 
     /** Console variables to set before running batches of tests (e.g. Automation Window, Gauntlet). */
-    UPROPERTY(config, EditAnywhere)
+	UPROPERTY(config, EditAnywhere, Category = "General")
     TMap<FString, FString> ConsoleVariables;
 
+    /** Console commands to execute before running batches of tests (e.g. Automation Window, Gauntlet). */
+    UPROPERTY(config, EditAnywhere, Category = "General")
+    TArray<FString> ConsoleCommands = {"Log LogLinker Off", "Log LogUObjectGlobals Off"};
+
+	/** Additional information about test maps. */
+	UPROPERTY(config)
+	TMap<FString, FDaeTestMapMetaData> TestMapsMetaData;
+
+	/** Create categories and subcategories for the tests in the session frontend. */
+	UPROPERTY(config, EditAnywhere, Category = "Session Frontend")
+	bool bUseFolderStructureAsCategories = false;
+
+	/** Global settings for each test. */
+	UPROPERTY(config, EditAnywhere, Category = "Global Settings")
+	FDaeTestMapSettings GlobalTestMapSettings;
+
     UDaeTestAutomationPluginSettings();
+	
+	static void SetTestMetaData(const AActor* TestActor, const FDaeTestMapMetaData& TestMetaData);
 
     virtual void PostInitProperties() override;
 
 #if WITH_EDITOR
-    virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
+    virtual void PostEditChangeChainProperty(FPropertyChangedChainEvent& PropertyChangedEvent) override;
 #endif
 
     /** Event when the set of test maps has changed. */

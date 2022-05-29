@@ -20,3 +20,8 @@ DEFINE_LATENT_AUTOMATION_COMMAND_ONE_PARAMETER(
 DEFINE_LATENT_AUTOMATION_COMMAND_ONE_PARAMETER(
     FDaeTestAutomationPluginRevertConsoleVariables,
     FDaeTestAutomationPluginAutomationTestFrameworkTestContext&, Context);
+
+/** Clean up properties inside of the test. */
+DEFINE_LATENT_AUTOMATION_COMMAND_ONE_PARAMETER(
+    FDaeTestAutomationPluginCleanUp,
+    FDaeTestAutomationPluginAutomationTestFrameworkTestContext&, Context);
