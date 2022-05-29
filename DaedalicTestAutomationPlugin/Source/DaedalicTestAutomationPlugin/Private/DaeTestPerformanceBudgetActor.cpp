@@ -3,6 +3,7 @@
 #include "DaeTestLogCategory.h"
 #include "DaeTestPerformanceBudgetResultData.h"
 #include "DaeTestReportWriterPerformance.h"
+#include "DaeUEFeatures.h"
 #include <EngineGlobals.h>
 #include <RenderCore.h>
 #include <UnrealClient.h>
@@ -220,7 +221,7 @@ void ADaeTestPerformanceBudgetActor::Tick(float DeltaSeconds)
             const float GameThreadTime = StatUnitData->GameThreadTime;
             const float RenderThreadTime = StatUnitData->RenderThreadTime;
 
-#if (ENGINE_MINOR_VERSION >= 26 || ENGINE_MAJOR_VERSION > 4)
+#if UE_4_26_OR_LATER
             const float GPUTime = StatUnitData->GPUFrameTime[0];
 #else
             const float GPUTime = StatUnitData->GPUFrameTime;
