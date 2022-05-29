@@ -1,7 +1,7 @@
 #include "AutomationTestFramework/DaeTestAutomationPluginAutomationTestFrameworkCommands.h"
-#include "DaeTestAutomationPluginSettings.h"
 #include "DaeTestEditorLogCategory.h"
 #include "DaeTestSuiteActor.h"
+#include "Settings/DaeTestAutomationPluginSettings.h"
 #include <Editor.h>
 #include <EngineUtils.h>
 #include <Editor/UnrealEdEngine.h>
@@ -18,7 +18,7 @@ bool FDaeTestAutomationPluginWaitForEndOfTestSuite::Update()
         return false;
     }
 
-    if (!Context.CurrentTestSuite)
+    if (!IsValid(Context.CurrentTestSuite))
     {
         for (TActorIterator<ADaeTestSuiteActor> Iter(GEditor->PlayWorld); Iter; ++Iter)
         {
@@ -26,12 +26,28 @@ bool FDaeTestAutomationPluginWaitForEndOfTestSuite::Update()
         }
     }
 
-    if (Context.CurrentTestSuite)
+    if (!IsValid(Context.CurrentTestSuite))
     {
-        return !Context.CurrentTestSuite->IsRunning();
+        return true;
     }
 
-    return false;
+    if (Context.CurrentTestSuite->IsRunning())
+    {
+        return false;
+    }
+    
+    // Test suite has finished!
+
+    const FDaeTestSuiteResult& Results = Context.CurrentTestSuite->GetResult();
+    for (auto& Result : Results.TestResults)
+    {
+        if (Result.HasFailed())
+        {
+            Context.CurTest->AddError(Result.FailureMessage);
+        }
+    }
+
+    return true;
 }
 
 bool FDaeTestAutomationPluginApplyConsoleVariables::Update()
@@ -76,4 +92,12 @@ bool FDaeTestAutomationPluginRevertConsoleVariables::Update()
     }
 
     return true;
+}
+
+bool FDaeTestAutomationPluginCleanUp::Update()
+{
+	Context.CurrentTestSuite = nullptr;
+	Context.OldConsoleVariables.Empty();
+
+	return true;
 }
