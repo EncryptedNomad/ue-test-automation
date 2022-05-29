@@ -1,6 +1,7 @@
 #pragma once
 
 #include "DaeTestSuiteResult.h"
+#include "Settings/DaeTestMapMetaData.h"
 #include <CoreMinimal.h>
 #include <GauntletTestController.h>
 #include "DaeGauntletTestController.generated.h"
@@ -24,9 +25,12 @@ private:
     TArray<FDaeTestSuiteResult> Results;
 
     void LoadNextTestMap();
+    /** Does the test has one of the required tags? */
+    bool DoesMapHasTag(const FString& TestName, const TArray<FString>& RequiredTags) const;
+    static EDaeTestPriority ConvertStringToPriority(const FString& TestPriorityString);
 
     UFUNCTION()
     void OnTestSuiteFinished(ADaeTestSuiteActor* TestSuite);
 
-    FString ParseCommandLineOption(const FString& Key);
+    FString ParseCommandLineOption(const FString& Key) const;
 };

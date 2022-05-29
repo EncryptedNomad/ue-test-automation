@@ -4,9 +4,9 @@
 #include "AssetTypeActions_DaeTestActorBlueprint.h"
 #include "AssetTypeActions_DaeTestParameterProviderActorBlueprint.h"
 #include "AssetTypeActions_DaeTestSuiteActorBlueprint.h"
-#include "DaeTestAutomationPluginSettings.h"
 #include "DaedalicTestAutomationPluginEditorClasses.h"
 #include "IDaedalicTestAutomationPluginEditor.h"
+#include "Settings/DaeTestAutomationPluginSettings.h"
 #include <AssetToolsModule.h>
 #include <CoreMinimal.h>
 #include <IAssetTypeActions.h>

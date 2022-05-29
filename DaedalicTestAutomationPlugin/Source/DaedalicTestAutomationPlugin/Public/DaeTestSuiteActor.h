@@ -41,7 +41,7 @@ public:
     FString GetCurrentTestName() const;
 
     /** Results of the whole test suite. */
-    FDaeTestSuiteResult GetResult() const;
+    const FDaeTestSuiteResult& GetResult() const;
 
     /** Gets report writers for all tests of this suite. */
     FDaeTestReportWriterSet GetReportWriters() const;

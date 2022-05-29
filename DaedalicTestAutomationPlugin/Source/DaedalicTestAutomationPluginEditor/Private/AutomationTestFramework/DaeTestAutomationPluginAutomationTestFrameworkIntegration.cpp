@@ -1,6 +1,6 @@
 #include "AutomationTestFramework/DaeTestAutomationPluginAutomationTestFrameworkIntegration.h"
-#include "DaeTestAutomationPluginSettings.h"
 #include "DaeTestEditorLogCategory.h"
+#include "Settings/DaeTestAutomationPluginSettings.h"
 #include <FileHelpers.h>
 #include <Misc/PackageName.h>
 #include <Misc/Paths.h>
@@ -25,14 +25,16 @@ void FDaeTestAutomationPluginAutomationTestFrameworkIntegration::DiscoverTests()
     // Iterate over all files, adding the ones with the map extension.
     for (const FString& FileName : PackageFiles)
     {
-        bool bIsMap = FPaths::GetExtension(FileName, true)
-                      == FPackageName::GetMapPackageExtension();
+        const bool bIsMap = FPaths::GetExtension(FileName, true)
+                            == FPackageName::GetMapPackageExtension();
         FName MapName = FName(*FPaths::GetBaseFilename(FileName));
 
         if (bIsMap && TestAutomationPluginSettings->IsTestMap(FileName, MapName))
         {
-            TSharedPtr<FDaeTestAutomationPluginAutomationTestFrameworkTest> NewTest =
-                MakeShareable(new FDaeTestAutomationPluginAutomationTestFrameworkTest(FileName));
+            const FDaeTestMapMetaData& MapMetaData =
+                TestAutomationPluginSettings->TestMapsMetaData.FindRef(MapName.ToString());
+            TSharedPtr<FDaeTestAutomationPluginAutomationTestFrameworkTest> NewTest = MakeShareable(
+                new FDaeTestAutomationPluginAutomationTestFrameworkTest(FileName, MapMetaData));
             Tests.Add(NewTest);
 
             UE_LOG(LogDaeTestEditor, Log, TEXT("Discovered test: %s"), *NewTest->GetMapName());
