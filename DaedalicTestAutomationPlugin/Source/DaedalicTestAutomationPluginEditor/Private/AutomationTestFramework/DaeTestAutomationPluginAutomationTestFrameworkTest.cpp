@@ -77,7 +77,8 @@ void FDaeTestAutomationPluginAutomationTestFrameworkTest::GetTests(
 bool FDaeTestAutomationPluginAutomationTestFrameworkTest::RunTest(const FString& Parameters)
 {
     UE_LOG(LogDaeTestEditor, Display, TEXT("Running test for map: %s"), *MapName);
-	
+
+    Context.CurrentTestSuite = nullptr;
     Context.CurTest = this;
 
     ADD_LATENT_AUTOMATION_COMMAND(FDaeTestAutomationPluginApplyConsoleVariables(Context));

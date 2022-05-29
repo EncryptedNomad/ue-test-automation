@@ -77,28 +77,38 @@ ADaeTestActor* ADaeTestSuiteActor::GetCurrentTest() const
 
 UObject* ADaeTestSuiteActor::GetCurrentTestParameter() const
 {
-    ADaeTestActor* Test = GetCurrentTest();
-
+    const ADaeTestActor* Test = GetCurrentTest();
     if (!IsValid(Test))
     {
         return nullptr;
     }
 
     TArray<TSoftObjectPtr<UObject>> TestParameters = Test->GetParameters();
-
     if (!TestParameters.IsValidIndex(TestParameterIndex))
     {
         return nullptr;
     }
-
-    TSoftObjectPtr<UObject> Parameter = TestParameters[TestParameterIndex];
-
-    if (!Parameter.IsValid())
+    
+    UObject* Parameter = TestParameters[TestParameterIndex].LoadSynchronous();
+    if (!IsValid(Parameter))
     {
         return nullptr;
     }
 
-    return Parameter.LoadSynchronous();
+    // If this is a reference to a Blueprint class, a default object of that Blueprint is returned.
+    const bool bIsABlueprint = Parameter->IsA(UBlueprint::StaticClass());
+    if (bIsABlueprint && Parameter->IsAsset())
+    {
+        const FString ClassSuffix = TEXT("_C");
+        const FString Name = Parameter->GetPathName() + ClassSuffix;
+        const UClass* ParameterObjectClass = LoadClass<UObject>(nullptr, *Name);
+        if (IsValid(ParameterObjectClass))
+        {
+            return ParameterObjectClass->GetDefaultObject();
+        }
+    }
+
+    return Parameter;
 }
 
 FString ADaeTestSuiteActor::GetCurrentTestName() const
@@ -122,7 +132,7 @@ FString ADaeTestSuiteActor::GetCurrentTestName() const
     return TestName;
 }
 
-FDaeTestSuiteResult ADaeTestSuiteActor::GetResult() const
+const FDaeTestSuiteResult& ADaeTestSuiteActor::GetResult() const
 {
     return Result;
 }

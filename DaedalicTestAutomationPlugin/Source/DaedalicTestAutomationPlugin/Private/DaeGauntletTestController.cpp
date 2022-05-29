@@ -18,6 +18,14 @@ void UDaeGauntletTestController::OnInit()
     const UDaeTestAutomationPluginSettings* TestAutomationPluginSettings =
         GetDefault<UDaeTestAutomationPluginSettings>();
 
+    // Execute console commands.
+    for (auto& ConsoleCommand : TestAutomationPluginSettings->ConsoleCommands)
+    {
+        GEngine->Exec(GetWorld(), *ConsoleCommand);
+        UE_LOG(LogDaeTest, Log, TEXT("UDaeGauntletTestController: Executed console command %s"),
+               *ConsoleCommand);
+    }
+
     for (const FString& TestMapFolder : TestAutomationPluginSettings->TestMapFolders)
     {
         UE_LOG(LogDaeTest, Display, TEXT("Discovering tests from: %s"), *TestMapFolder);
@@ -57,7 +65,8 @@ void UDaeGauntletTestController::OnInit()
         {
             CVar->Set(*ConsoleVariable.Value);
 
-            UE_LOG(LogDaeTest, Log, TEXT("Setting console variable %s = %s"), *ConsoleVariable.Key,
+            UE_LOG(LogDaeTest, Log, TEXT("Setting console variable %s = %s"),
+                   *ConsoleVariable.Key,
                    *ConsoleVariable.Value);
         }
     }
@@ -102,8 +111,9 @@ void UDaeGauntletTestController::OnTick(float TimeDelta)
     }
     else if (GetCurrentState() == FDaeGauntletStates::LoadingNextMap)
     {
-        UE_LOG(LogDaeTest, Display, TEXT("FDaeGauntletStates::LoadingNextMap - Loading map: %s"),
-               *MapNames[MapIndex].ToString());
+        UE_LOG(LogGauntlet, Display,
+               TEXT("FDaeGauntletStates::LoadingNextMap - Loading map: %s (%d/%d)"),
+               *MapNames[MapIndex].ToString(), (MapIndex + 1), MapNames.Num());
 
         UGameplayStatics::OpenLevel(this, MapNames[MapIndex]);
     }
@@ -309,7 +319,7 @@ void UDaeGauntletTestController::OnTestSuiteFinished(ADaeTestSuiteActor* TestSui
 
     const FDaeTestReportWriterSet ReportWriters = TestSuite->GetReportWriters();
 
-    for (const TSharedPtr<FDaeTestReportWriter> ReportWriter : ReportWriters.GetReportWriters())
+    for (const TSharedPtr<FDaeTestReportWriter>& ReportWriter : ReportWriters.GetReportWriters())
     {
         ReportWriter->WriteReport(Results, ReportPath);
     }

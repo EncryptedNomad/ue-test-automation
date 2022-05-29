@@ -33,7 +33,11 @@ public:
 
     /** Console variables to set before running batches of tests (e.g. Automation Window, Gauntlet). */
 	UPROPERTY(config, EditAnywhere, Category = "General")
-	TMap<FString, FString> ConsoleVariables;
+    TMap<FString, FString> ConsoleVariables;
+
+    /** Console commands to execute before running batches of tests (e.g. Automation Window, Gauntlet). */
+    UPROPERTY(config, EditAnywhere, Category = "General")
+    TArray<FString> ConsoleCommands = {"Log LogLinker Off", "Log LogUObjectGlobals Off"};
 
 	/** Additional information about test maps. */
 	UPROPERTY(config)
