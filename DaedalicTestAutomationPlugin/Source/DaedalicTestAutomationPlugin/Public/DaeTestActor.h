@@ -6,6 +6,11 @@
 #include <GameFramework/Actor.h>
 #include "DaeTestActor.generated.h"
 
+class UDaeTestReplayComponent;
+class UDaeTestRecordingComponent;
+class ADaeTestParameterProviderActor;
+class FDaeTestResultData;
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FDaeTestActorTestSuccessfulSignature, ADaeTestActor*,
                                              Test, UObject*, Parameter);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FDaeTestActorTestFailedSignature, ADaeTestActor*,
@@ -15,8 +20,18 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FDaeTestActorTestSkippedSignature
                                                Test, UObject*, Parameter, const FString&,
                                                SkipReason);
 
-class ADaeTestParameterProviderActor;
-class FDaeTestResultData;
+USTRUCT()
+struct FDaeTestRecordingSettings
+{
+    GENERATED_BODY()
+
+    /** Should this test be driven by recorded player input? */
+    UPROPERTY(EditInstanceOnly)
+    bool bUseRecordedPlayerInput = false;
+    /** If set to true the test actor will record all player input. */
+    UPROPERTY(EditInstanceOnly, Meta = (EditCondition = "bUseRecordedPlayerInput"))
+    bool bIsRecording = false;
+};
 
 /** Single automated test to be run as part of a test suite. */
 UCLASS()
@@ -34,7 +49,7 @@ public:
     void RunTest(UObject* TestParameter);
 
     /** Finishes execution of this test, automatically following up with the Assert step. */
-    UFUNCTION(BlueprintCallable)
+    UFUNCTION(BlueprintPure = false)
     void FinishAct();
 
     /** Gets how long this test is allowed to run before it fails automatically, in seconds. */
@@ -47,7 +62,7 @@ public:
     TArray<TSoftObjectPtr<UObject>> GetParameters() const;
 
     /** Gets the parameter for the current test run. */
-    UFUNCTION(BlueprintPure)
+    UFUNCTION(BlueprintPure = true)
     UObject* GetCurrentParameter() const;
 
     /** Collects additional result data for this test after it has finished. */
@@ -103,9 +118,14 @@ public:
     FDaeTestActorTestSkippedSignature OnTestSkipped;
 
 protected:
+    virtual void BeginPlay() override;
+
 #if WITH_EDITOR
 	virtual void PostEditChangeChainProperty(FPropertyChangedChainEvent& PropertyChangedEvent) override;
 #endif
+
+    UFUNCTION(BlueprintPure = true)
+    bool IsRecording() const;
 
     /** How long this test is allowed to run before it fails automatically, in seconds. */
     UPROPERTY(EditAnywhere)
@@ -126,7 +146,11 @@ private:
 
 	/** Optional meta data for a test. */
 	UPROPERTY(EditInstanceOnly)
-	FDaeTestMapMetaData TestMetaData;
+    FDaeTestMapMetaData TestMetaData;
+
+    /** Enable the option to record player input and to replay that input in the test. */
+    UPROPERTY(EditInstanceOnly)
+    FDaeTestRecordingSettings RecordingSettings;
 
     /** Parameter for the current test run. */
     UPROPERTY()
@@ -139,4 +163,11 @@ private:
     /** Whether this test has finished executing (either with success or failure). */
     UPROPERTY()
     bool bHasResult = false;
+
+    /** Component responsible for recording player input. */
+    UPROPERTY()
+    UDaeTestRecordingComponent* RecordingComponent = nullptr;
+    /** Component responsible for replaying recorded player input. */
+    UPROPERTY()
+    UDaeTestReplayComponent* ReplayComponent = nullptr;
 };

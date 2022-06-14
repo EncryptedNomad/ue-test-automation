@@ -1,4 +1,6 @@
 #include "DaeTestActor.h"
+#include "RecordedInput/DaeTestRecordingComponent.h"
+#include "RecordedInput/DaeTestReplayComponent.h"
 #include "DaeTestAssertBlueprintFunctionLibrary.h"
 #include "DaeTestLogCategory.h"
 #include "DaeTestParameterProviderActor.h"
@@ -11,6 +13,10 @@ ADaeTestActor::ADaeTestActor(
     : Super(ObjectInitializer)
 {
     TimeoutInSeconds = 30.0f;
+
+    RecordingComponent =
+        CreateDefaultSubobject<UDaeTestRecordingComponent>(TEXT("RecordingComponent"));
+    ReplayComponent = CreateDefaultSubobject<UDaeTestReplayComponent>(TEXT("ReplayComponent"));
 }
 
 void ADaeTestActor::ApplyParameterProviders()
@@ -178,8 +184,25 @@ void ADaeTestActor::NotifyOnAssert(UObject* Parameter)
 {
     UDaeTestAssertBlueprintFunctionLibrary::AssertFalse(bHadTimeout,
                                                         TEXT("The test had a timeout."), this);
-
+														
     ReceiveOnAssert(Parameter);
+}
+
+void ADaeTestActor::BeginPlay()
+{
+    Super::BeginPlay();
+
+    if (RecordingSettings.bUseRecordedPlayerInput)
+    {
+        if (RecordingSettings.bIsRecording && IsValid(RecordingComponent))
+        {
+            RecordingComponent->StartRecording();
+        }
+        else if (IsValid(ReplayComponent))
+        {
+            ReplayComponent->LoadRecording();
+        }
+    }
 }
 
 #if WITH_EDITOR
@@ -196,6 +219,11 @@ void ADaeTestActor::PostEditChangeChainProperty(FPropertyChangedChainEvent& Prop
 	}
 }
 #endif
+
+bool ADaeTestActor::IsRecording() const
+{
+    return RecordingSettings.bIsRecording;
+}
 
 void ADaeTestActor::ReceiveOnAct_Implementation(UObject* Parameter)
 {
